@@ -7,28 +7,30 @@ import argparse
 import torch
 
 from datasets import NewDataset
-from nn_models import TsNet
+from nn_models import LSTMNet
 
-NN_MODEL_DIR = 'checkpoints/TsNet.pt'
+## global variables
+NN_MODEL_DIR = 'checkpoints/LSTMNet/ckp_epoch_24.pth'
 ML_MODEL_DIR = 'models_ckp/SupportVectorMachine_Grid_Search_Model_UncorrelatedDataset.pkl'
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-MODEL = TsNet().to(DEVICE)
+NN_MODEL = LSTMNet().to(DEVICE)
+##
 
 def _predict_ml_model(model_ckp: Path, X: np.array) -> np.array:
     model = joblib.load(model_ckp)
     return model.predict(X)
 
 def _predict_nn_model(model_ckp: Path, X: np.array) -> np.array:
-    model = MODEL().load_from_checkpoint(model_ckp)
-    model.eval()
+    NN_MODEL.load_checkpoint(NN_MODEL, model_ckp)
+    NN_MODEL.eval()
     with torch.no_grad():
-        preds = model(X)
+        preds = NN_MODEL(X)
     return (preds > 0.5).float().to('cpu').numpy()
 
 def predict(dir_model:Path, data_dir:Path, mode:str) -> np.array:
     if mode == 'nn':
         data = NewDataset(data_dir)
-        X = data.get_data_tensor()
+        X = data.get_data_tensors()
         return _predict_nn_model(dir_model, X)
     else:
         data = NewDataset(data_dir)
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_type", 
         type=str, 
-        default="ml",
+        default="nn",
         help="Type of model to use (e.g., 'ml' for classic machine learning model or 'nn' for a neural network model)."
     )
     
