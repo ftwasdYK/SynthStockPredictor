@@ -6,36 +6,36 @@ import joblib
 import argparse
 import torch
 
-from utils_training import split_time_series
+from datasets import NewDataset
+from nn_models import TsNet
 
 NN_MODEL_DIR = 'checkpoints/TsNet.pt'
-ML_MODEL_DIR = 'models_ckp/____'
+ML_MODEL_DIR = 'models_ckp/SupportVectorMachine_Grid_Search_Model_UncorrelatedDataset.pkl'
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+MODEL = TsNet().to(DEVICE)
 
-def process_data(data: pd.DataFrame) -> pd.DataFrame:
-    pass
-
-def _predict_ml_model(model_ckp: Path, X: np.array | pd.DataFrame) -> np.array:
+def _predict_ml_model(model_ckp: Path, X: np.array) -> np.array:
     model = joblib.load(model_ckp)
     return model.predict(X)
 
-def _predict_nn_model(model_ckp: Path, X: np.array | pd.DataFrame) -> np.array:
-    model = TsNet().load_from_checkpoint(model_ckp)
+def _predict_nn_model(model_ckp: Path, X: np.array) -> np.array:
+    model = MODEL().load_from_checkpoint(model_ckp)
     model.eval()
     with torch.no_grad():
         preds = model(X)
     return (preds > 0.5).float().to('cpu').numpy()
 
-def predict(dir_model:Path, data_dir:Path, mode:str) -> np.array[1, ...]:
+def predict(dir_model:Path, data_dir:Path, mode:str) -> np.array:
     if mode == 'nn':
-        data = NNNewDataSet(data_dir)
-        X = data.eval()
+        data = NewDataset(data_dir)
+        X = data.get_data_tensor()
         return _predict_nn_model(dir_model, X)
     else:
-        data = NewDataSet(data_dir)
-        X = data.eval()
+        data = NewDataset(data_dir)
+        X = data.get_data()
         return _predict_ml_model(dir_model, X)
     
-# process
+# main function
 def pipeline(data_dir:Path, dir_model:Path, mode:str, dir_results:Path):
     """
     Main function to process data and train models.
@@ -52,21 +52,21 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_dir", 
         type=str, 
-        required=True, 
+        default="raw_data/raw_data.csv",
         help="Path to the data directory."
     )
 
     parser.add_argument(
         "--model_type", 
         type=str, 
-        required=True, 
+        default="ml",
         help="Type of model to use (e.g., 'ml' for classic machine learning model or 'nn' for a neural network model)."
     )
     
     parser.add_argument(
         "--dir_results",
         type=str,
-        required=True,
+        default="results/results.csv",
         help="Directory to save the results."
     )
     
@@ -78,5 +78,3 @@ if __name__ == "__main__":
         mode=args.model_type,
         dir_results=Path(args.dir_results)
     )
-
-
