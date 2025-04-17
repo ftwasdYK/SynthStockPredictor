@@ -17,7 +17,7 @@ class TsNet(nn.Module):
     def forward(self, x):
         x = self.extractor(x.unsqueeze(1))
         x = self.fc(self.flat(x))
-        return self.sig(x).squeeze()
+        return self.sig(x)
 
     @staticmethod
     def load_checkpoint(model:nn.Module, checkpoint_path:Path):
@@ -33,7 +33,7 @@ class FeatureExctractor(nn.Module):
         self.batchnorm = nn.LazyBatchNorm1d()
     
     def forward(self, x):
-        x = self.pool(self.conv1(x))
+        x = (self.conv1(x))
         x = self.pool(self.conv2(x))
         x = F.relu(self.batchnorm(x))
         return x
