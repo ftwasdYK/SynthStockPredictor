@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 import joblib
+import os
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -10,15 +11,18 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 
 from utils_training import split_time_series
-from ml_models import RandomForest, RidgeClassifierModel
-from ml_datasets import FullDataset
+from ml_models import RandomForest, RidgeClassifierModel, SupportVectorMachine
+from datasets import FullDataset, UncorrelatedDataset
 
 NORMALAZATION_TECHNIQUE = StandardScaler()
-MODELS = [RandomForest(), RidgeClassifierModel()]
-
+MODELS = [RandomForest(), RidgeClassifierModel(), SupportVectorMachine()]
 
 if __name__ == "__main__":
-    data = FullDataset()
+    
+    if not os.path.exists("results_training"):
+        os.makedirs("results_training")
+
+    data = UncorrelatedDataset() #FullDataset()
     x_train, y_train = data.train()
     x_test, y_test = data.test()
     
@@ -47,7 +51,7 @@ if __name__ == "__main__":
         y_pred = grid_search.predict(x_test)
         report_test = classification_report(y_test, y_pred, output_dict=True)
         report_df = pd.DataFrame(report_test).rename(columns={"0.0": "Class 0", "1.0": "Class 1"})
-        report_df.to_csv(f'results/{MODEL.str_name}_Classification_Report_{data.get_name}.csv')
+        report_df.to_csv(f'results_training/{MODEL.str_name}_Classification_Report_{data.get_name}.csv')
         
         print(report_train)
         print(report_df.transpose())
