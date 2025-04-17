@@ -26,12 +26,11 @@ def split_time_series(data, n_splits:int=5) -> tuple:
 ## Pytorch ##
 class InferClassificationReport():
     """
-    In
+    Class to infer the classification report for the model.
     """
-    def __init__(self, model:nn.Module, device:str, model_ckp:Path):
+    def __init__(self, model:nn.Module, device:str):
         self.model = model
         self.device = device
-        self.model_ckp = model_ckp
         self.acc_metric = torchmetrics.classification.BinaryAccuracy().to(self.device)
         self.prec_metric = torchmetrics.classification.BinaryPrecision().to(self.device)
         self.rec_metric = torchmetrics.classification.BinaryRecall().to(self.device)
@@ -62,13 +61,12 @@ class FindBestModel:
         self.max = -10000
         self.best= None
     
-    def __call__(self, score:float, cpk_dir:Path):
+    def __call__(self, score:float, model:nn.Module):
         if score > self.max:
             self.max = score
-            self.cpk_dir = cpk_dir
             self.best = {
                 "score": score,
-                "model_weigths_dir": cpk_dir
+                "model": model
             }
     
     
