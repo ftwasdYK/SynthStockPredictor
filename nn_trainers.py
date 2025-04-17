@@ -41,7 +41,8 @@ class BinaryClassificationTrainer:
             checkpoint_dir:str='./checkpoints', 
             patience=10, 
             scheduler=None,
-            verbose=False
+            verbose:bool=False,
+            save_bool:bool=False
             ):
         
         self.model = model
@@ -55,6 +56,7 @@ class BinaryClassificationTrainer:
         self.scheduler = scheduler
         self.checkpoint_dir = checkpoint_dir
         self.verbose = verbose
+        self.save_ckp = save_bool
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
         self.early_stop = EarlyStopping(patience=patience, mode='min')
@@ -67,12 +69,11 @@ class BinaryClassificationTrainer:
             inputs, labels = data
             inputs, labels = inputs.to(self.device), labels.to(self.device)
             self.optimizer.zero_grad()
-            outputs = self.model(inputs)  
+            outputs = self.model(inputs)
             loss = self.loss_fn(outputs, labels)
             loss.backward()
             self.optimizer.step()
             train_loss += loss.item()
-            # print((outputs==labels).sum())
             if self.verbose:
                 if batch % 100 == 0:
                     loss, current = loss.item(), (batch) * 32 + len(inputs)
@@ -94,6 +95,7 @@ class BinaryClassificationTrainer:
         self.history['val_loss'].append(val_loss / len(self.val_loader))
 
     def train_nn(self):
+        checkp_dir = None
         for epoch in range(self.epochs):
             self.train_epoch()
             self.val_epoch()
@@ -107,12 +109,13 @@ class BinaryClassificationTrainer:
                 print("---Early stopping---")
                 print("-"*10)
                 # Save checkpoint
-                checkp_dir = self.save_checkpoint(epoch + 1)
+                if self.save_ckp:
+                    checkp_dir = self.save_checkpoint(epoch + 1)
                 self.plot_history()
                 return self.history, checkp_dir
             self.scheduler.step()
-   
-        checkp_dir = self.save_checkpoint(epoch + 1)
+        if self.save_ckp:
+            checkp_dir = self.save_checkpoint(epoch + 1)
         self.plot_history()
         return self.history, checkp_dir
     
