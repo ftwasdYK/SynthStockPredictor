@@ -49,20 +49,36 @@ class UncorrelatedDataset(BluePrintDataset):
 class FullDatasetTorch(FullDataset):
     def __init__(self):
         super().__init__()
+        _, self.split_indexes = split_time_series(self.train()[0], n_splits=5)
+        self._preprocess_data()
 
     def _preprocess_data(self):
         # Convert to tensors
-        self.X = torch.tensor(self.X, dtype=torch.float32)
-        self.y = torch.tensor(self.y, dtype=torch.float32)
+        self.X = torch.tensor(self.X.to_numpy(), dtype=torch.float32)
+        self.y = torch.tensor(self.y.to_numpy(), dtype=torch.float32)
+
+    def get_splits(self) -> tuple:
+        """
+        Returns the train and test splits
+        """
+        return self.split_indexes
 
 class UncorrelatedDatasetTorch(UncorrelatedDataset):
     def __init__(self):
         super().__init__()
+        _, self.split_indexes = split_time_series(self.train()[0], n_splits=5)
+        self._preprocess_data()
 
     def _preprocess_data(self):
         # Convert to tensors
-        self.X = torch.tensor(self.X, dtype=torch.float32)
-        self.y = torch.tensor(self.y, dtype=torch.float32)
+        self.X = torch.tensor(self.X.to_numpy(), dtype=torch.float32)
+        self.y = torch.tensor(self.y.to_numpy(), dtype=torch.float32)
+    
+    def get_splits(self) -> tuple:
+        """
+        Returns the train and test splits
+        """
+        return self.split_indexes
 
 
 ## For unknown data (without labels), production mode ##
