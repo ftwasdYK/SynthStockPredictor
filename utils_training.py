@@ -36,13 +36,14 @@ class InferClassificationReport():
         self.rec_metric = torchmetrics.classification.BinaryRecall().to(self.device)
 
     def eval(self, val_loader:torch.utils.data.DataLoader) -> dict:
+        self.model.eval()
         with torch.no_grad():
             for data, target in val_loader:
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
-                acc = self.acc_metric(output, target)
-                precision = self.prec_metric(output, target)
-                recall = self.rec_metric(output, target)
+                acc = self.acc_metric(output.squeeze(), target.squeeze())
+                precision = self.prec_metric(output.squeeze(), target.squeeze())
+                recall = self.rec_metric(output.squeeze(), target.squeeze())
                     
             acc = self.acc_metric.compute()
             precision = self.prec_metric.compute()

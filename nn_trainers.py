@@ -41,6 +41,7 @@ class BinaryClassificationTrainer:
             checkpoint_dir:str='./checkpoints', 
             patience=10, 
             scheduler=None,
+            plot_flag:bool=False,
             verbose:bool=False,
             save_bool:bool=False
             ):
@@ -57,6 +58,7 @@ class BinaryClassificationTrainer:
         self.checkpoint_dir = checkpoint_dir
         self.verbose = verbose
         self.save_ckp = save_bool
+        self.plot_flag = plot_flag
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
         self.early_stop = EarlyStopping(patience=patience, mode='min')
@@ -70,7 +72,7 @@ class BinaryClassificationTrainer:
             inputs, labels = inputs.to(self.device), labels.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
-            loss = self.loss_fn(outputs, labels)
+            loss = self.loss_fn(outputs.squeeze(), labels.squeeze())
             loss.backward()
             self.optimizer.step()
             train_loss += loss.item()
@@ -90,7 +92,7 @@ class BinaryClassificationTrainer:
                 inputs, labels = data
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 outputs = self.model(inputs)
-                loss = self.loss_fn(outputs, labels)
+                loss = self.loss_fn(outputs.squeeze(), labels.squeeze())
                 val_loss += loss.item()
         self.history['val_loss'].append(val_loss / len(self.val_loader))
 
@@ -111,12 +113,14 @@ class BinaryClassificationTrainer:
                 # Save checkpoint
                 if self.save_ckp:
                     checkp_dir = self.save_checkpoint(epoch + 1)
-                self.plot_history()
+                if self.plot_flag:
+                    self.plot_history()
                 return self.history, checkp_dir
             self.scheduler.step()
         if self.save_ckp:
             checkp_dir = self.save_checkpoint(epoch + 1)
-        self.plot_history()
+        if self.plot_flag:
+            self.plot_history()
         return self.history, checkp_dir
     
     def plot_history(self):
