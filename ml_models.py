@@ -1,4 +1,4 @@
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import RidgeClassifier
 from sklearn.svm import SVC
 
@@ -17,7 +17,7 @@ class RandomForest:
         return self._model
     @property
     def str_name(self):
-        return 'RandomForest'
+        return self.__class__.__name__
     
 class RidgeClassifierModel:
     def __init__(self):
@@ -35,7 +35,7 @@ class RidgeClassifierModel:
     
     @property
     def str_name(self):
-        return 'RidgeClassifier'
+        return self.__class__.__name__
     
     
 class SupportVectorMachine:
@@ -55,23 +55,4 @@ class SupportVectorMachine:
     
     @property
     def str_name(self):
-        return 'SupportVectorMachine'
-    
-
-class RandomForestR:
-    def __init__(self):
-        self._model = RandomForestRegressor()
-
-    @property
-    def param_grid(self):
-        return {
-            'model__n_estimators': [5, 15, 50, 100],
-            'model__max_depth': [3, 5, 10, 20],
-        }
-    
-    def get_model(self):
-        return self._model
-    
-    @property
-    def str_name(self):
-        return 'RandomForestRegressor'
+        return self.__class__.__name__
